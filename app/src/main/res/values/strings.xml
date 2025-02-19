@@ -84,8 +84,8 @@ E.g. <b>META</b> for <i>META key</i>, \n
     <string name="pref_pauseKeyInterceptingWithEsc">Pause key intercepting with Esc key</string>
     <string name="pref_filterOutWinkey">Filter out intercepted Win (Meta/Mod4) key.</string>
     <string name="pref_filterOutWinkey_summary">Allows you to use Dex shortcuts while intercepting. Requires Accessibility service to work.</string>
-    <string name="pref_enableGboardCJK">Workaround to enable CJK Gboard</string>
-    <string name="pref_enableGboardCJK_summary">May require Android 14 and Gboard 14</string>
+    <string name="pref_enforceCharBasedInput">Enforce char based input</string>
+    <string name="pref_enforceCharBasedInput_summary">Suppresses suggestions, predictive typing and CJK languages</string>
 
     <string name="pref_clipboardEnable">Clipboard sharing</string>
     <string name="pref_requestNotificationPermission">Request notification permission</string>

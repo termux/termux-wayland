@@ -102,6 +102,7 @@ typedef enum {
     EVENT_CLIPBOARD_ANNOUNCE,
     EVENT_CLIPBOARD_REQUEST,
     EVENT_CLIPBOARD_SEND,
+    EVENT_WINDOW_FOCUS_CHANGED,
 } eventType;
 
 typedef union {

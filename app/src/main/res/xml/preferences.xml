@@ -49,7 +49,7 @@
         <SwitchPreferenceCompat app:key="enableAccessibilityServiceAutomatically" app:defaultValue="false" />
         <SwitchPreferenceCompat app:key="pauseKeyInterceptingWithEsc" app:defaultValue="false" />
         <SwitchPreferenceCompat app:key="filterOutWinkey" app:defaultValue="false" />
-        <SwitchPreferenceCompat app:key="enableGboardCJK" app:defaultValue="false" />
+        <SwitchPreferenceCompat app:key="enforceCharBasedInput" app:defaultValue="false" />
     </PreferenceScreen>
     <PreferenceScreen app:key="other">
         <SwitchPreferenceCompat app:key="clipboardEnable" app:defaultValue="true" />

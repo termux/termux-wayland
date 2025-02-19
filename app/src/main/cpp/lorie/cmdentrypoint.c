@@ -472,6 +472,13 @@ void lorieUnregisterBuffer(LorieBuffer* buffer) {
     }
 }
 
+void DDXNotifyFocusChanged(void) {
+    if (conn_fd != -1) {
+        lorieEvent e = { .type = EVENT_WINDOW_FOCUS_CHANGED };
+        write(conn_fd, &e, sizeof(e));
+    }
+}
+
 JNIEXPORT jobject JNICALL
 Java_com_termux_x11_CmdEntryPoint_getXConnection(JNIEnv *env, __unused jobject cls) {
     int client[2];

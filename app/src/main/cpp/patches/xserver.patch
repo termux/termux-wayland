@@ -299,3 +299,23 @@ index f9b7b06d9..f4b2aeddc 100644
  
      /* display is initialized to "0" by main(). It is then set to the display
       * number if specified on the command line. */
++++ b/dix/enterleave.c
+@@ -1540,6 +1540,8 @@ DeviceFocusEvents(DeviceIntPtr dev, WindowPtr from, WindowPtr to, int mode)
+     }
+ }
+ 
++extern void DDXNotifyFocusChanged(void);
++
+ /**
+  * Figure out if focus events are necessary and send them to the
+  * appropriate windows.
+@@ -1550,6 +1552,9 @@ DeviceFocusEvents(DeviceIntPtr dev, WindowPtr from, WindowPtr to, int mode)
+ void
+ DoFocusEvents(DeviceIntPtr pDev, WindowPtr from, WindowPtr to, int mode)
+ {
++    if (from != to)
++        DDXNotifyFocusChanged();
++
+     if (!IsKeyboardDevice(pDev))
+         return;
+ 
