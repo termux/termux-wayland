@@ -96,12 +96,13 @@ typedef enum {
     EVENT_MOUSE,
     EVENT_KEY,
     EVENT_STYLUS,
-    EVENT_STYLUS_ENABLE,
+    EVENT_STYLUS_ENABLE, // Adăugăm acest tip de eveniment
     EVENT_UNICODE,
     EVENT_CLIPBOARD_ENABLE,
     EVENT_CLIPBOARD_ANNOUNCE,
     EVENT_CLIPBOARD_REQUEST,
     EVENT_CLIPBOARD_SEND,
+    EVENT_GAMEPAD
 } eventType;
 
 typedef union {
@@ -139,13 +140,6 @@ typedef union {
         uint8_t buttons, eraser, mouse;
     } stylus;
     struct {
-        uint8_t t, enable;
-    } stylusEnable;
-    struct {
-        uint8_t t;
-        uint32_t code;
-    } unicode;
-    struct {
         uint8_t t;
         uint8_t enable;
     } clipboardEnable;
@@ -153,7 +147,24 @@ typedef union {
         uint8_t t;
         uint32_t count;
     } clipboardSend;
+    struct __attribute__((packed)){
+        uint8_t t;
+        uint8_t button;
+        bool pressed;
+        int16_t axisX;
+        int16_t axisY;
+        uint8_t axisID;
+    } gamepad;
+    struct {
+        uint8_t t;
+        wchar_t code;
+    } unicode;
+    struct {
+        uint8_t t;
+        uint8_t enable;
+    } stylusEnable;
 } lorieEvent;
+
 
 struct lorie_shared_server_state {
     /*
@@ -223,10 +234,10 @@ static int android_to_linux_keycode[304] = {
         [ 15  /* ANDROID_KEYCODE_8 */] = KEY_8,
         [ 16  /* ANDROID_KEYCODE_9 */] = KEY_9,
         [ 17  /* ANDROID_KEYCODE_STAR */] = KEY_KPASTERISK,
-        [ 19  /* ANDROID_KEYCODE_DPAD_UP */] = KEY_UP,
-        [ 20  /* ANDROID_KEYCODE_DPAD_DOWN */] = KEY_DOWN,
-        [ 21  /* ANDROID_KEYCODE_DPAD_LEFT */] = KEY_LEFT,
-        [ 22  /* ANDROID_KEYCODE_DPAD_RIGHT */] = KEY_RIGHT,
+        [ 19  /* ANDROID_KEYCODE_DPAD_UP */] = BTN_DPAD_UP,
+        [ 20  /* ANDROID_KEYCODE_DPAD_DOWN */] = BTN_DPAD_DOWN,
+        [ 21  /* ANDROID_KEYCODE_DPAD_LEFT */] = BTN_DPAD_LEFT,
+        [ 22  /* ANDROID_KEYCODE_DPAD_RIGHT */] = BTN_DPAD_RIGHT,
         [ 23  /* ANDROID_KEYCODE_DPAD_CENTER */] = KEY_ENTER,
         [ 24  /* ANDROID_KEYCODE_VOLUME_UP */] = KEY_VOLUMEUP, // XF86XK_AudioRaiseVolume
         [ 25  /* ANDROID_KEYCODE_VOLUME_DOWN */] = KEY_VOLUMEDOWN, // XF86XK_AudioLowerVolume

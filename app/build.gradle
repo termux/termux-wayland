@@ -10,7 +10,7 @@ android {
         targetSdkVersion 34
         versionCode 15
         def commit= 'git rev-parse --verify --short HEAD'.execute().text.trim()
-        def version = "1.03.01"
+        def version = "1.03.01-extra"
         versionName "${version}-${commit.length()==1?"nongit":commit}-${(new Date()).format("dd.MM.yy")}"
         buildConfigField "String", "COMMIT", "\"" + ("git rev-parse HEAD\n".execute().getText().trim() ?: (System.getenv('CURRENT_COMMIT') ?: "NO_COMMIT")) + "\""
     }

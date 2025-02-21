@@ -41,7 +41,7 @@ from The Open Group.
 #define XI_PEN	"TERMUX-X11 PEN"
 #define XI_ERASER	"TERMUX-X11 ERASER"
 
-__unused DeviceIntPtr lorieMouse, lorieTouch, lorieKeyboard, loriePen, lorieEraser;
+__unused DeviceIntPtr lorieMouse, lorieTouch, lorieKeyboard, loriePen, lorieEraser, lorieGamepad;
 
 void
 ProcessInputEvents(void) {
@@ -207,6 +207,7 @@ lorieStylusProc(DeviceIntPtr device, int what) {
             axes_labels[4] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_TILT_Y);
             axes_labels[5] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_WHEEL);
 
+
             /* Valuators - match the xf86-input-wacom ranges */
             if (!InitValuatorClassDeviceStruct(device, NAXES, axes_labels, GetMotionHistorySize(), Absolute)
                 || !InitValuatorAxisStruct(device, 0, axes_labels[0], 0, 0x3FFFF, 10000, 0, 10000, Absolute)
@@ -266,34 +267,142 @@ lorieSetStylusEnabled(Bool enabled) {
     }
 }
 
-void
-InitInput(__unused int argc, __unused char *argv[]) {
+static int lorieGamepadProc(DeviceIntPtr device, int what) {
+#ifndef BTN_LABEL_PROP_BTN_10
+#define BTN_LABEL_PROP_BTN_10 "DPad_Up"
+#endif
+#ifndef BTN_LABEL_PROP_BTN_11
+#define BTN_LABEL_PROP_BTN_11 "DPad_Down"
+#endif
+#ifndef BTN_LABEL_PROP_BTN_12
+#define BTN_LABEL_PROP_BTN_12 "DPad_Left"
+#endif
+#ifndef BTN_LABEL_PROP_BTN_13
+#define BTN_LABEL_PROP_BTN_13 "DPad_Right"
+#endif
+#ifndef BTN_LABEL_PROP_BTN_14
+#define BTN_LABEL_PROP_BTN_14 "Xbox_Home"
+#endif
+#ifndef BTN_LABEL_PROP_BTN_15
+#define BTN_LABEL_PROP_BTN_15 "Share_Button"
+#endif
+
+
+#define NBUTTONS 16
+#define NAXES 8  // Stick-uri + triggere + dpad
+
+    BYTE map[NBUTTONS + 1] = {0};
+    Atom btn_labels[NBUTTONS] = {0};
+    Atom axes_labels[NAXES] = {0};
+
+    int i;
+
+    switch (what) {
+        case DEVICE_INIT:
+            device->public.on = FALSE;
+
+            for (i = 1; i <= NBUTTONS; i++)
+                map[i] = i;
+
+            axes_labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_X);  // Stick Stânga X
+            axes_labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_Y);  // Stick Stânga Y
+
+
+            btn_labels[0] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_0);  // A
+            btn_labels[1] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_1);  // B
+            btn_labels[2] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_2);  // X
+            btn_labels[3] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_3);  // Y
+            btn_labels[4] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_4);  // LB (Left Bumper)
+            btn_labels[5] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_5);  // RB (Right Bumper)
+            btn_labels[6] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_6);  // Select (Back)
+            btn_labels[7] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_7);  // Start
+            btn_labels[8] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_8);  // Left Stick Click (L3)
+            btn_labels[9] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_9);  // Right Stick Click (R3)
+
+            btn_labels[10] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_10);
+            if (!btn_labels[10]) btn_labels[10] = MakeAtom("DPad_Up", 7, TRUE);
+
+            btn_labels[11] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_11);
+            if (!btn_labels[11]) btn_labels[11] = MakeAtom("DPad_Down", 9, TRUE);
+
+            btn_labels[12] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_12);
+            if (!btn_labels[12]) btn_labels[12] = MakeAtom("DPad_Left", 9, TRUE);
+
+            btn_labels[13] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_13);
+            if (!btn_labels[13]) btn_labels[13] = MakeAtom("DPad_Right", 10, TRUE);
+
+            btn_labels[14] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_14);
+            if (!btn_labels[14]) btn_labels[14] = MakeAtom("Xbox_Home", 10, TRUE);
+
+            btn_labels[15] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_15);
+            if (!btn_labels[15]) btn_labels[15] = MakeAtom("Share_Button", 12, TRUE);
+
+
+            if (!InitButtonClassDeviceStruct(device, NBUTTONS, btn_labels, map) ||
+                !InitValuatorClassDeviceStruct(device, NAXES, axes_labels, GetMotionHistorySize(),
+                                               Absolute) ||
+                !InitValuatorAxisStruct(device, 0, axes_labels[0], -32768, 32767, 1, 0, 1,
+                                        Absolute) ||
+                !InitValuatorAxisStruct(device, 1, axes_labels[1], -32768, 32767, 1, 0, 1,
+                                        Absolute)) {
+                return BadValue;
+            }
+
+            return Success;
+
+        case DEVICE_ON:
+            device->public.on = TRUE;
+            return Success;
+
+        case DEVICE_OFF:
+        case DEVICE_CLOSE:
+            device->public.on = FALSE;
+            return Success;
+
+        default:
+            return BadMatch;
+    }
+#undef NBUTTONS
+#undef NAXES
+}
+
+
+
+
+void InitInput(__unused int argc, __unused char *argv[]) {
     lorieMouse = AddInputDevice(serverClient, lorieMouseProc, TRUE);
     lorieTouch = AddInputDevice(serverClient, lorieTouchProc, TRUE);
     lorieKeyboard = AddInputDevice(serverClient, lorieKeybdProc, TRUE);
+    lorieGamepad = AddInputDevice(serverClient, lorieGamepadProc, TRUE);
+
+    if (!lorieMouse || !lorieTouch || !lorieKeyboard || !lorieGamepad) {
+        __android_log_print(ANDROID_LOG_ERROR, "LorieNative", "Eroare la inițializarea dispozitivelor de input!");
+        return;
+    }
+
     AssignTypeAndName(lorieMouse, MakeAtom(XI_MOUSE, sizeof(XI_MOUSE) - 1, TRUE), "Lorie mouse");
     AssignTypeAndName(lorieTouch, MakeAtom(XI_TOUCHSCREEN, sizeof(XI_TOUCHSCREEN) - 1, TRUE), "Lorie touch");
     AssignTypeAndName(lorieKeyboard, MakeAtom(XI_KEYBOARD, sizeof(XI_KEYBOARD) - 1, TRUE), "Lorie keyboard");
+    AssignTypeAndName(lorieGamepad, MakeAtom("LORIE_GAMEPAD", sizeof("LORIE_GAMEPAD") - 1, TRUE), "Lorie gamepad");
+
     ActivateDevice(lorieMouse, FALSE);
     ActivateDevice(lorieTouch, FALSE);
     ActivateDevice(lorieKeyboard, FALSE);
+    ActivateDevice(lorieGamepad, FALSE);
+
     EnableDevice(lorieMouse, TRUE);
     EnableDevice(lorieTouch, TRUE);
     EnableDevice(lorieKeyboard, TRUE);
+    EnableDevice(lorieGamepad, TRUE);
+
     AttachDevice(NULL, lorieMouse, inputInfo.pointer);
     AttachDevice(NULL, lorieTouch, inputInfo.pointer);
     AttachDevice(NULL, lorieKeyboard, inputInfo.keyboard);
-
-    // We should explicitly create stylus pen and eraser devices here for the case of X server reset.
-    if (loriePen && lorieEraser) {
-        loriePen = lorieEraser = NULL;
-        lorieSetStylusEnabled(true);
-    }
+    AttachDevice(NULL, lorieGamepad, inputInfo.pointer);
 
     (void) mieqInit();
 }
 
-void
-CloseInput(void) {
+void CloseInput(void) {
     mieqFini();
 }

@@ -61,6 +61,7 @@
         <item>toggle soft keyboard</item>
         <item>toggle additional key bar</item>
         <item>open preferences</item>
+        <item>open layout</item>
         <item>release pointer and keyboard capture</item>
         <item>toggle fullscreen</item>
         <item>restart activity</item>

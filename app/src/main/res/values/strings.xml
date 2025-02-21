@@ -18,6 +18,7 @@ E.g. <b>META</b> for <i>META key</i>, \n
 <b>STYLUS_HELPER</b> for <i>stylus click override overlay toggling key</i>, \n
 <b>EXIT</b> for <i>application exit key</i>.</string>
     <string name="notification_content_text">Pull down to show options</string>
+    <string name="notification_open_layout">Layout</string>
     <string name="notification_open_preferences">Preferences</string>
     <string name="notification_exit">Exit</string>
     <string name="notification_restart_activity">Restart</string>
@@ -109,9 +110,11 @@ E.g. <b>META</b> for <i>META key</i>, \n
     <string name="pref_notificationTapAction">Notification tap</string>
     <string name="pref_notificationButton0Action">Notification first button</string>
     <string name="pref_notificationButton1Action">Notification second button</string>
+    <string name="pref_notificationButton2Action">Notification third button</string>
     <string name="pref_mediaKeysAction">Media keys</string>
 
     <string name="pref_summary_requiresExactOrCustom">Requires "display resolution mode" to be "exact" or "custom"</string>
     <string name="pref_summary_requiresIntercepting">Requires intercepting system shortcuts with Dex mode or with Accessibility service</string>
     <string name="pref_summary_requiresTrackpadAndNative">Requires "Touchscreen input mode" to be "Trackpad" and "Display resolution mode" to be not "native"</string>
+    <string name="support_button_text" />
 </resources>

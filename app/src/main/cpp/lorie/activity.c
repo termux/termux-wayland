@@ -375,6 +375,43 @@ static void surfaceChanged(JNIEnv *env, __unused jobject thiz, jobject sfc) {
     rendererSetWindow(win);
 }
 
+
+static void sendGamepadEvent(JNIEnv *env, jobject thiz, jint button, jboolean pressed,
+                             jfloat axisX, jfloat axisY, jint axisID) {
+    if (conn_fd != -1) {
+        lorieEvent e;
+        memset(&e, 0, sizeof(e));
+
+        int max_value = 32767;
+
+        if (axisID == 2 || axisID == 3) {
+            max_value = 255;
+        }else if (axisID == 4 || axisID == 5){
+            max_value = 1;
+        }
+
+        e.gamepad.t = EVENT_GAMEPAD;
+        e.gamepad.button = button;
+        e.gamepad.pressed = pressed;
+        e.gamepad.axisX = axisX * max_value;
+        e.gamepad.axisY = axisY * max_value;
+        e.gamepad.axisID = (int8_t)axisID;
+
+        log(DEBUG, "Trimitere GamepadEvent: buton=%d, apasat=%d, axisID=%d, axe=%f %f",
+            button, pressed, axisID, axisX, axisY);
+
+        ssize_t bytes_written = write(conn_fd, &e, sizeof(e));
+
+        if (bytes_written < (ssize_t)sizeof(e)) {
+            log(ERROR, "Eroare la trimitere GamepadEvent: s-au scris doar %zd din %zu bytes",
+                bytes_written, sizeof(e));
+        }
+    }
+}
+
+
+
+
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, __unused void *reserved) {
     JNIEnv* env;
     static JNINativeMethod methods[] = {
@@ -394,13 +431,14 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, __unused void *reserved) {
             {"sendKeyEvent", "(IIZ)Z", (void *)&sendKeyEvent},
             {"sendTextEvent", "([B)V", (void *)&sendTextEvent},
             {"requestConnection", "()Z", (void *)&requestConnection},
+            {"sendGamepadEvent", "(IZFFI)V", (void *)&sendGamepadEvent},
+
     };
+
     (*vm)->AttachCurrentThread(vm, &env, NULL);
     jclass cls = (*env)->FindClass(env, "com/termux/x11/LorieView");
     (*env)->RegisterNatives(env, cls, methods, sizeof(methods)/sizeof(methods[0]));
-
     rendererInit(env);
-
     return JNI_VERSION_1_6;
 }
 
