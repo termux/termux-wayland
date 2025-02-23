@@ -76,6 +76,11 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.PatternSyntaxException;
+import com.termux.x11.Prefs;
+
+
+import androidx.preference.Preference;
+import androidx.preference.PreferenceFragmentCompat;
 
 @SuppressWarnings("deprecation")
 public class LoriePreferences extends AppCompatActivity implements PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
@@ -295,6 +300,15 @@ public class LoriePreferences extends AppCompatActivity implements PreferenceFra
             setNoActionOptionText(findPreference("volumeDownAction"), "android volume control");
             setNoActionOptionText(findPreference("volumeUpAction"), "android volume control");
             setNoActionOptionText(findPreference("mediaKeysAction"), "android media control");
+
+            Preference virtualKeyPref = findPreference("editVirtualKeys");
+            if (virtualKeyPref != null) {
+                virtualKeyPref.setOnPreferenceClickListener(preference -> {
+                    Intent intent = new Intent(getActivity(), VirtualKeyMapperActivity.class);
+                    startActivity(intent);
+                    return true;
+                });
+            }
         }
 
         private void setSummary(CharSequence key, int disabled) {

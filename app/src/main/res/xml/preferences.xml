@@ -6,8 +6,11 @@
         <Preference app:title="@string/pref_output" app:fragment="output" />
         <Preference app:title="@string/pref_pointer" app:fragment="pointer" />
         <Preference app:title="@string/pref_kbd" app:fragment="kbd" />
+        <Preference app:key="controller" app:title="Controller" />
         <Preference app:title="@string/pref_other" app:fragment="other" />
-        <Preference app:key="version" app:title="@string/pref_version" />
+        <Preference
+            app:key="version"
+            app:title="@string/pref_version" />
     </PreferenceScreen>
     <PreferenceScreen app:key="output">
         <ListPreference app:key="displayResolutionMode" app:defaultValue="native" app:entries="@array/displayResolutionVariants" app:entryValues="@array/displayResolutionVariants"  />
@@ -62,7 +65,13 @@
         <SwitchPreferenceCompat app:key="useTermuxEKBarBehaviour" app:defaultValue="false" />
         <SeekBarPreference app:key="opacityEKBar" app:defaultValue="100" app:min="1" android:max="100" app:seekBarIncrement="1" app:showSeekBarValue="true" app:updatesContinuously="true" />
         <EditTextPreference app:key="extra_keys_config" />
+        <Preference
+            android:key="editVirtualKeys"
+            android:title="Customize Virtual Keys"
+            android:summary="Map, resize, and position virtual keys on the screen."
+            android:onClick="openVirtualKeyMapper"/>
     </PreferenceScreen>
+
     <PreferenceScreen app:key="userActions">
         <ListPreference app:key="swipeUpAction" app:defaultValue="no action" app:entries="@array/userActionsValues" app:entryValues="@array/userActionsValues" />
         <ListPreference app:key="swipeDownAction" app:defaultValue="toggle additional key bar" app:entries="@array/userActionsValues" app:entryValues="@array/userActionsValues" />
@@ -72,6 +81,7 @@
         <ListPreference app:key="notificationTapAction" app:defaultValue="open preferences" app:entries="@array/userActionsValues" app:entryValues="@array/userActionsValues" />
         <ListPreference app:key="notificationButton0Action" app:defaultValue="open preferences" app:entries="@array/userActionsValues" app:entryValues="@array/userActionsValues" />
         <ListPreference app:key="notificationButton1Action" app:defaultValue="exit" app:entries="@array/userActionsValues" app:entryValues="@array/userActionsValues" />
+        <ListPreference app:key="notificationButton2Action" app:defaultValue="open layout" app:entries="@array/userActionsValues" app:entryValues="@array/userActionsValues" />
         <ListPreference app:key="mediaKeysAction" app:defaultValue="no action" app:entries="@array/userActionsMediaKeyValues" app:entryValues="@array/userActionsMediaKeyValues" />
     </PreferenceScreen>
 </PreferenceScreen>

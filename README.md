@@ -1,23 +1,26 @@
 
-# Termux:X11
+# Termux:X11-Extra
 
-[![Nightly build](https://github.com/termux/termux-x11/actions/workflows/debug_build.yml/badge.svg?branch=master)](https://github.com/termux/termux-x11/actions/workflows/debug_build.yml) [![Join the chat at https://gitter.im/termux/termux](https://badges.gitter.im/termux/termux.svg)](https://gitter.im/termux/termux) [![Join the Termux discord server](https://img.shields.io/discord/641256914684084234?label=&logo=discord&logoColor=ffffff&color=5865F2)](https://discord.gg/HXpF69X)
+A Termux:X11 fork but with extra features.
+
+It supports Controller and more customizable Screen Keys.
+For Controller input make sure to enable "Prefer scancodes when possible" and disable "Hardware keyboard scancodes workaround".
 
 A [Termux](https://termux.com) X11 server add-on app.
 
 ## About
-Termux:X11 is a fully fledged X server. It is built with Android NDK and optimized to be used with Termux.
+Termux:X11-Extra is a fully fledged X server. It is built with Android NDK and optimized to be used with Termux.
 
 ## Submodules caveat
 This repo uses submodules. Use 
 
 ```
-git clone --recurse-submodules https://github.com/termux/termux-x11 
+git clone --recurse-submodules https://github.com/moio9/termux-x11-extra 
 ```
 or
 ```
-git clone https://github.com/termux/termux-x11
-cd termux-x11
+git clone https://github.com/moio9/termux-x11-extra
+cd termux-x11-extra
 git submodule update --init --recursive
 ```
 
@@ -25,13 +28,13 @@ git submodule update --init --recursive
 Just like any other X server.
 
 ## Setup Instructions
-Termux:X11 requires Android 8 or later. It consists of an Android app and a companion termux package, and you must install both.
+Termux:X11-Extra requires Android 8 or later. It consists of an Android app and a companion termux package, and you must install both.
 
-The Android app is available via the [nightly release tag](https://github.com/termux/termux-x11/releases/tag/nightly) of this repository. Download and install the `app-$ARCHITECTURE-debug.apk` matching your device's CPU architecture. (You can choose `app-universal-debug.apk` if you are not sure which architecture to pick, and it'll use a few extra MB of storage.) 
+The Android app is available via the [v x.y](https://github.com/moio9/termux-x11/releases/) of this repository. Download and install the `app-$ARCHITECTURE-debug.apk` matching your device's CPU architecture. (You can choose `app-universal-debug.apk` if you are not sure which architecture to pick, and it'll use a few extra MB of storage.) 
 
 The companion termux package is available from the termux graphical repository. You can ensure it's enabled and install this package with `pkg i x11-repo && pkg i termux-x11-nightly`. If you need to, you can also download a `.deb` or `*.tar.xz` from the same nightly release tag as above.
 
-Finally, most people will want to use a desktop environment with Termux:X11. If you don't know what that means or don't know which one to pick, run `pkg i xfce` (also from `x11-repo`) to install a good one to start with. The rest of these instructions will assume that your goal is to run an XFCE desktop, or that you can modify the instructions as you follow them for your actual goal.
+Finally, most people will want to use a desktop environment with Termux:X11-Extra. If you don't know what that means or don't know which one to pick, run `pkg i xfce` (also from `x11-repo`) to install a good one to start with. The rest of these instructions will assume that your goal is to run an XFCE desktop, or that you can modify the instructions as you follow them for your actual goal.
 
 ## Running Graphical Applications
 You can start your desired graphical application by doing:
@@ -97,7 +100,7 @@ export CLASSPATH=$(/system/bin/pm path com.termux.x11 | cut -d: -f2)
 
 ### Force stopping X server (running in termux background, not an activity)
 
-termux-x11's X server runs in process with name "termux-x11". You can kill it by
+termux-x11-extra's X server runs in process with name "termux-x11". You can kill it by
 ```
 pkill termux-x11
 ```
@@ -117,7 +120,7 @@ The log obtained in this way can be quite long.
 It's better to redirect the output of the command to a file right away.
 
 ### Notification
-In Android 13 post notifications was restricted so you should explicitly let Termux:X11 show you notifications.
+In Android 13 post notifications was restricted so you should explicitly let Termux:X11-Extra show you notifications.
 <details>
 <summary>Video</summary>
 
@@ -195,12 +198,22 @@ Use `termux-x11-preference list > file` to dump current preferences to file.
 Use `termux-x11-preferences < file` to restore preferences from file.
 Use `termux-x11-preferences "fullscreen"="false" "showAdditionalKbd"="true"` to disable fullscreen and enable additional key bar. The full list of preferences you can modify is available with `termux-x11-preference list` command. You can specify one or more preferences here.
 
-Termux:X11 activity should be available in background or foreground, otherwise `termux-x11-preferences` tool will hang indefinitely.
+Termux:X11-Extra activity should be available in background or foreground, otherwise `termux-x11-preferences` tool will hang indefinitely.
 In the case if there is `Store preferences for secondary displays separately` preference active `termux-x11-preference` will use/modify preferences of display where Termux:X11 activity is currently opened.
 
 ## Using with 3rd party apps
-It is possible to use Termux:X11 with 3rd party apps.
+It is possible to use Termux:X11-Extra with 3rd party apps.
 Check how `shell-loader/src/main/java/com/termux/x11/Loader.java` works.
 
 # License
 Released under the [GPLv3 license](https://www.gnu.org/licenses/gpl-3.0.html).
+
+## **Please help to keep this project alive:**
+
+**Monero:** 46Mk8t9uLY7jnBXnyHMyVARvwk1Y7jcGEQwKLN8GtGGBioncjKLgkEa33jEN2ibgkQjoFZWVwXXwsM3vzAFz4RzV7psLow6
+
+**Bitcoin:** bc1qgxp74eza7jaf4fdw5cl3sanqvnh0cjmz0w9scz
+
+**Ethereum:** 0xa024a505Ec24c7eA163985eC89D56e614B9AdAae
+
+**Paypall:** https://paypal.me/moioyoyo

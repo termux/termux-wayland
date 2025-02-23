@@ -65,7 +65,7 @@ public final class InputEventSender {
     }
 
     public void sendMouseDown(int button, boolean relative) {
-        if (!buttons.contains(button)) 
+        if (!buttons.contains(button))
             return;
         mInjector.sendMouseEvent(0, 0, button, true, relative);
     }

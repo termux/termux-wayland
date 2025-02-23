@@ -7,6 +7,7 @@ import static android.view.KeyEvent.*;
 import static android.view.WindowManager.LayoutParams.*;
 import static com.termux.x11.CmdEntryPoint.ACTION_START;
 import static com.termux.x11.LoriePreferences.ACTION_PREFERENCES_CHANGED;
+import static com.termux.x11.VirtualKeyMapperActivity.getDisplayId;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -21,6 +22,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -53,23 +55,32 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 import androidx.core.math.MathUtils;
+import androidx.preference.Preference;
 import androidx.viewpager.widget.ViewPager;
 
+import com.termux.x11.input.GamepadInputHandler;
 import com.termux.x11.input.InputEventSender;
 import com.termux.x11.input.InputStub;
 import com.termux.x11.input.TouchInputHandler;
+import com.termux.x11.input.VirtualKeyHandler;
+import com.termux.x11.VirtualKeyMapperActivity;
 import com.termux.x11.utils.FullscreenWorkaround;
 import com.termux.x11.utils.KeyInterceptor;
 import com.termux.x11.utils.SamsungDexUtils;
 import com.termux.x11.utils.TermuxX11ExtraKeys;
 import com.termux.x11.utils.X11ToolbarViewPager;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @SuppressLint("ApplySharedPref")
 @SuppressWarnings({"deprecation", "unused"})
@@ -147,6 +158,10 @@ public class MainActivity extends AppCompatActivity {
         return instance;
     }
 
+    private VirtualKeyHandler virtualKeyHandler;
+    private GamepadInputHandler gamepadHandler;
+
+
     @Override
     @SuppressLint({"AppCompatMethod", "ObsoleteSdkInt", "ClickableViewAccessibility", "WrongConstant", "UnspecifiedRegisterReceiverFlag"})
     protected void onCreate(Bundle savedInstanceState) {
@@ -166,10 +181,27 @@ public class MainActivity extends AppCompatActivity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.main_activity);
 
+
         frm = findViewById(R.id.frame);
+        findViewById(R.id.command_button).setOnClickListener((l) -> {
+            Intent intent = new Intent();
+            intent.setClassName("com.termux", "com.termux.app.RunCommandService");
+            intent.setAction("com.termux.RUN_COMMAND");
+            intent.putExtra("com.termux.RUN_COMMAND_PATH", "/data/data/com.termux/files/usr/bin/bootx");
+            intent.putExtra("com.termux.RUN_COMMAND_ARGUMENTS", new String[]{});
+//            intent.putExtra("com.termux.RUN_COMMAND_WORKDIR", "/data/data/com.termux/files/home");
+            intent.putExtra("com.termux.RUN_COMMAND_BACKGROUND", true);
+            try {
+                getApplicationContext().startService(intent);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
         findViewById(R.id.preferences_button).setOnClickListener((l) -> startActivity(new Intent(this, LoriePreferences.class) {{ setAction(Intent.ACTION_MAIN); }}));
         findViewById(R.id.help_button).setOnClickListener((l) -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/termux/termux-x11/blob/master/README.md#running-graphical-applications"))));
         findViewById(R.id.exit_button).setOnClickListener((l) -> finish());
+        findViewById(R.id.support_button).setOnClickListener((l) -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/moio9/termux-x11-extra"))));
 
         LorieView lorieView = findViewById(R.id.lorieView);
         View lorieParent = (View) lorieView.getParent();
@@ -248,9 +280,132 @@ public class MainActivity extends AppCompatActivity {
             requestPermissions(new String[] { Manifest.permission.POST_NOTIFICATIONS }, 0);
         }
 
+
+        if (SDK_INT >= VERSION_CODES.M
+                && checkSelfPermission("com.termux.permission.RUN_COMMAND") != PackageManager.PERMISSION_GRANTED) {
+            Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.parse("package:" + getPackageName()));
+            startActivity(intent);
+            Toast.makeText(this, "Pleas grant permission 'Run commands in Termux environment'", Toast.LENGTH_LONG).show();
+        }
+
+
         onReceiveConnection(getIntent());
         findViewById(android.R.id.content).addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> makeSureHelpersAreVisibleAndInScreenBounds());
+
+        FrameLayout mainContainer = findViewById(R.id.frame);
+        if (mainContainer == null) {
+            return;
+        }
+
+
+        refreshLoadedPreset(true);
+
+        gamepadHandler = new GamepadInputHandler(this);
+        gamepadHandler.setupGamepadInput();
+
+
     }
+
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (event.getDevice() != null) {
+            int source = event.getSource();
+
+            if ((source & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD ||
+                    (source & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK ||
+                    (source & InputDevice.SOURCE_DPAD) == InputDevice.SOURCE_DPAD) {
+
+                if (gamepadHandler != null) {
+                    boolean handled = gamepadHandler.handleKeyDown(keyCode, event);
+                    return handled || super.onKeyDown(keyCode, event);
+                }
+            }
+        }
+
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (event.getDevice() != null) {
+            int source = event.getSource();
+
+            if ((source & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD ||
+                    (source & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK ||
+                    (source & InputDevice.SOURCE_DPAD) == InputDevice.SOURCE_DPAD) {
+
+                if (gamepadHandler != null) {
+                    boolean handled = gamepadHandler.handleKeyUp(keyCode, event);
+                    return handled || super.onKeyUp(keyCode, event);
+                }
+            }
+        }
+
+        return super.onKeyUp(keyCode, event);
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) { //
+        if (event.getDevice() != null && event.getDevice().isVirtual()) {
+            return super.dispatchKeyEvent(event);
+        }
+        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+            return onKeyDown(event.getKeyCode(), event);
+        } else if (event.getAction() == KeyEvent.ACTION_UP) {
+            return onKeyUp(event.getKeyCode(), event);
+        }
+
+        return super.dispatchKeyEvent(event);
+    }
+
+
+
+    @Override
+    public boolean onGenericMotionEvent(MotionEvent event) {
+        if (gamepadHandler != null) {
+            return gamepadHandler.handleGenericMotionEvent(event) || super.onGenericMotionEvent(event);
+        }
+        return super.onGenericMotionEvent(event);
+    }
+
+    private boolean isPresetLoaded = false;
+    void refreshLoadedPreset(boolean forceLoad) {
+        if (!isPresetLoaded || forceLoad){
+            FrameLayout buttonLayer = findViewById(R.id.top);
+
+            List<View> toRemove = new ArrayList<>();
+            for (int i = 0; i < buttonLayer.getChildCount(); i++) {
+                View child = buttonLayer.getChildAt(i);
+                if (child instanceof Button) {
+                    toRemove.add(child);
+                }
+            }
+            for (View view : toRemove) {
+                buttonLayer.removeView(view);
+            }
+            if (LorieView.connected()){
+                SharedPreferences prefs = getSharedPreferences("button_prefs", MODE_PRIVATE);
+                String screenID = getDisplayId(this);
+                String lastPreset = prefs.getString("last_used_preset_" + screenID, "preset_empty");
+
+                VirtualKeyHandler virtualKeyHandler = new VirtualKeyHandler(this);
+                VirtualKeyMapperActivity virtualKeyMapperActivity = new VirtualKeyMapperActivity();
+                List<Button> buttons = virtualKeyMapperActivity.loadPreset(this, lastPreset, buttonLayer);
+
+                for (Button btn : buttons) {
+                    virtualKeyHandler.setupInputForButton(btn);
+
+                    if (btn.getParent() == null) {
+                        buttonLayer.addView(btn);
+                    }
+                }
+
+            }
+        }
+    }
+
 
     @Override
     protected void onDestroy() {
@@ -443,20 +598,20 @@ public class MainActivity extends AppCompatActivity {
 
         Map.of(left, InputStub.BUTTON_LEFT, middle, InputStub.BUTTON_MIDDLE, right, InputStub.BUTTON_RIGHT)
                 .forEach((v, b) -> v.setOnTouchListener((__, e) -> {
-            switch(e.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                case MotionEvent.ACTION_POINTER_DOWN:
-                    getLorieView().sendMouseEvent(0, 0, b, true, true);
-                    v.setPressed(true);
-                    break;
-                case MotionEvent.ACTION_UP:
-                case MotionEvent.ACTION_POINTER_UP:
-                    getLorieView().sendMouseEvent(0, 0, b, false, true);
-                    v.setPressed(false);
-                    break;
-            }
-            return true;
-        }));
+                    switch(e.getAction()) {
+                        case MotionEvent.ACTION_DOWN:
+                        case MotionEvent.ACTION_POINTER_DOWN:
+                            getLorieView().sendMouseEvent(0, 0, b, true, true);
+                            v.setPressed(true);
+                            break;
+                        case MotionEvent.ACTION_UP:
+                        case MotionEvent.ACTION_POINTER_UP:
+                            getLorieView().sendMouseEvent(0, 0, b, false, true);
+                            v.setPressed(false);
+                            break;
+                    }
+                    return true;
+                }));
 
         pos.setOnTouchListener(new View.OnTouchListener() {
             final int touchSlop = (int) Math.pow(ViewConfiguration.get(MainActivity.this).getScaledTouchSlop(), 2);
@@ -697,7 +852,7 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("ObsoleteSdkInt")
     Notification buildNotification() {
         NotificationCompat.Builder builder =  new NotificationCompat.Builder(this, getNotificationChannel(mNotificationManager))
-                .setContentTitle("Termux:X11")
+                .setContentTitle("Termux:X11-Extra")
                 .setSmallIcon(R.drawable.ic_x11_icon)
                 .setContentText(getResources().getText(R.string.notification_content_text))
                 .setOngoing(true)
@@ -859,18 +1014,22 @@ public class MainActivity extends AppCompatActivity {
     @SuppressWarnings("SameParameterValue")
     void clientConnectedStateChanged() {
         runOnUiThread(()-> {
-            boolean connected = LorieView.connected();
-            setTerminalToolbarView();
-            findViewById(R.id.mouse_buttons).setVisibility(prefs.showMouseHelper.get() && "1".equals(prefs.touchMode.get()) && connected ? View.VISIBLE : View.GONE);
-            findViewById(R.id.stub).setVisibility(connected?View.INVISIBLE:View.VISIBLE);
-            getLorieView().setVisibility(connected?View.VISIBLE:View.INVISIBLE);
+                    boolean connected = LorieView.connected();
+                    setTerminalToolbarView();
+                    findViewById(R.id.mouse_buttons).setVisibility(prefs.showMouseHelper.get() && "1".equals(prefs.touchMode.get()) && connected ? View.VISIBLE : View.GONE);
+                    findViewById(R.id.stub).setVisibility(connected ? View.INVISIBLE : View.VISIBLE);
+                    getLorieView().setVisibility(connected ? View.VISIBLE : View.INVISIBLE);
 
-            // We should recover connection in the case if file descriptor for some reason was broken...
-            if (!connected)
-                tryConnect();
-            else
-                getLorieView().setPointerIcon(PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL));
-
+                    // We should recover connection in the case if file descriptor for some reason was broken...
+                    if (!connected) {
+                        tryConnect();
+                        isPresetLoaded = false;
+                        refreshLoadedPreset(false);
+                    } else{
+                        getLorieView().setPointerIcon(PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL));
+                        refreshLoadedPreset(false);
+                        isPresetLoaded = true;
+                    }
             onWindowFocusChanged(hasWindowFocus());
         });
     }
@@ -884,8 +1043,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void checkRestartInput() {
         // an imperfect workaround for Gboard CJK keyboard in DeX soft keyboard mode
-        // in that particular mode during language switching, InputConnection#requestCursorUpdates() is not called and no signal can be picked up. 
-        // therefore, check to activate CJK keyboard is done upon a keypress.  
+        // in that particular mode during language switching, InputConnection#requestCursorUpdates() is not called and no signal can be picked up.
+        // therefore, check to activate CJK keyboard is done upon a keypress.
         if (getLorieView().enableGboardCJK && SamsungDexUtils.checkDeXEnabled(this))
             getLorieView().checkRestartInput(false);
         handler.postDelayed(this::checkRestartInput, 300);

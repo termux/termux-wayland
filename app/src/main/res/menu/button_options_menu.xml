@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_delete"
+        android:title="Delete" />
+    <item
+        android:id="@+id/action_copy"
+        android:title="Copy" />
+    <item
+        android:id="@+id/action_resize"
+        android:title="Resize" />
+    <item
+        android:id="@+id/action_transparency"
+        android:title="Set Transparency" />
+    <item
+        android:id="@+id/action_set_input"
+        android:title="Set Input Key"/>
+    <item
+        android:id="@+id/action_rename"
+        android:title="Rename"/>
+
+</menu>

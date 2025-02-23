@@ -35,6 +35,7 @@ import com.termux.x11.LoriePreferences;
 import com.termux.x11.LorieView;
 import com.termux.x11.MainActivity;
 import com.termux.x11.Prefs;
+import com.termux.x11.VirtualKeyMapperActivity;
 import com.termux.x11.utils.SamsungDexUtils;
 
 import java.lang.annotation.Retention;
@@ -501,9 +502,14 @@ public class TouchInputHandler {
                     setPackage(mActivity.getPackageName());
                     setAction(Intent.ACTION_MAIN);
                 }}, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+            case "open layout":  // 🔹 Adaugă suport pentru Layout
+                return PendingIntent.getActivity(mActivity, requestCode, new Intent(mActivity, VirtualKeyMapperActivity.class), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
             case "restart activity":
                 return PendingIntent.getActivity(mActivity, requestCode,
                         Intent.makeRestartActivityTask(mActivity.getComponentName()), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
             case "exit":
             case "toggle soft keyboard":
             case "toggle additional key bar":
@@ -512,11 +518,13 @@ public class TouchInputHandler {
                     putExtra("what", name);
                     setPackage(mActivity.getPackageName());
                 }}, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-            default: return null;
+
+            default:
+                return null;
         }
     }
 
-    @SuppressLint("DiscouragedApi")
+
     public String extractTitleFromPreferences(Prefs p, String name) {
         LoriePreferences.PrefsProto.Preference pref = p.keys.get(name + "Action");
         if (pref == null)
@@ -539,8 +547,12 @@ public class TouchInputHandler {
         if ((i = extractIntentFromPreferences(prefs, "notificationButton1", 2)) != null)
             builder.addAction(0, extractTitleFromPreferences(prefs, "notificationButton1"), i);
 
+        if ((i = extractIntentFromPreferences(prefs, "notificationButton2", 3)) != null)
+            builder.addAction(0, extractTitleFromPreferences(prefs, "notificationButton2"), i);
+
         return builder;
     }
+
 
     public boolean shouldInterceptKeys() {
         return !mInjector.pauseKeyInterceptingWithEsc || keyIntercepting;
